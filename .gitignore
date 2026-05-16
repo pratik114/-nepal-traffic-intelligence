@@ -1,0 +1,61 @@
+# Virtual environment
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules
+node_modules/
+
+# Frontend dist
+frontend/dist/
+frontend/vite.config.js.timestamp-*.mjs
+
+# Large model files
+models/*.pt
+models/*.pth
+models/*.onnx
+yolov8n.pt
+
+# Training outputs
+runs/
+training/runs/
+
+# Videos
+videos/*.mp4
+videos/*.avi
+videos/*.mov
+
+# Dataset
+dataset/
+
+# Outputs
+outputs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
