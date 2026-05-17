@@ -6,7 +6,6 @@ const API_URL = `${API_BASE_URL}/traffic/live`;
 const HISTORY_URL = `${API_BASE_URL}/traffic/history`;
 const STREAM_URL = `${API_BASE_URL}/traffic/stream`;
 const VIDEOS_URL = `${API_BASE_URL}/traffic/videos`;
-const CHANGE_VIDEO_URL = `${API_BASE_URL}/traffic/change-video`;
 
 const ALL_CLASSES = ['car', 'motorcycle', 'bus', 'truck', 'microbus'];
 
@@ -30,7 +29,7 @@ function App() {
         const response = await fetch(VIDEOS_URL);
         if (response.ok) {
           const result = await response.json();
-          setAvailableVideos(result.videos);
+          setAvailableVideos(result);
         }
       } catch (error) {
         console.error('Error fetching videos:', error);
@@ -102,13 +101,12 @@ function App() {
 
   const handleVideoChange = async (videoName) => {
     try {
-      const response = await fetch(CHANGE_VIDEO_URL, {
+      const response = await fetch(`${VIDEOS_URL}/${videoName}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ video_file: videoName })
       });
       if (response.ok) {
         setSelectedVideo(videoName);
+        setStreamKey(Date.now());
       }
     } catch (error) {
       console.error('Error changing video:', error);

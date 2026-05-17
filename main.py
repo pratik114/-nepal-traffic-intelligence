@@ -14,7 +14,7 @@ from backend.vision.utils import (
 )
 from backend.analytics.congestion import AnalyticsManager
 from backend.analytics.alert_system import AlertSystem, DirectionalCounter
-from backend.api.main import app, update_frame, update_analytics
+from backend.api.main import app, update_frame, update_analytics, get_current_video
 import uvicorn
 
 
@@ -101,6 +101,27 @@ def main():
     print(f"Processing video: {current_video}...")
 
     while True:
+        # Check if video has been changed via API
+        new_video = get_current_video()
+        if new_video != current_video:
+            print(f"🔄 Switching to video: {new_video}")
+            cap.release()
+            new_cap, new_fps, new_h, new_w = open_video(new_video)
+            if new_cap is not None:
+                current_video = new_video
+                cap = new_cap
+                fps = new_fps
+                out_height = new_h
+                out_width = new_w
+                frame_area = out_width * out_width
+                directional_counter = DirectionalCounter(line_y=out_height // 2)
+                heatmap = None
+                tracker = VehicleTracker()
+                analytics = AnalyticsManager()
+                print(f"✅ Switched to video: {current_video}")
+            else:
+                print(f"❌ Failed to switch to video: {new_video}")
+
         ret, frame = cap.read()
         if not ret:
             loop_count += 1

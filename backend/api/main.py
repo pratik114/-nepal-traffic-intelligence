@@ -6,6 +6,8 @@ import threading
 import time
 import numpy as np
 import logging
+import os
+from typing import List
 
 # Setup logging
 logging.basicConfig(level=logging.INFO,
@@ -67,9 +69,12 @@ analytics_data = {
     "congestion_index": 0.0,
     "traffic_status": "LOW",
     "fps": 0.0,
-    "alerts": []
+    "alerts": [],
+    "current_video": "input.mp4"
 }
 analytics_lock = threading.Lock()
+current_video_file = "input.mp4"
+video_lock = threading.Lock()
 
 # ============================================================
 # PLACEHOLDER FRAME (shown when video not ready)
@@ -160,7 +165,7 @@ async def root():
     return {
         "service": "Nepal Traffic Intelligence",
         "status": "running",
-        "endpoints": ["/health", "/traffic/live", "/traffic/stream"]
+        "endpoints": ["/health", "/traffic/live", "/traffic/stream", "/traffic/videos"]
     }
 
 @app.get("/health")
@@ -191,6 +196,28 @@ async def video_stream():
         }
     )
 
+@app.get("/traffic/videos", response_model=List[str])
+async def get_videos():
+    videos_dir = "videos"
+    if not os.path.exists(videos_dir):
+        return []
+    videos = [f for f in os.listdir(videos_dir) if f.endswith(('.mp4', '.avi', '.mov'))]
+    return sorted(videos)
+
+@app.post("/traffic/videos/{video_name}")
+async def set_video(video_name: str):
+    global current_video_file
+    videos_dir = "videos"
+    video_path = os.path.join(videos_dir, video_name)
+    if not os.path.exists(video_path):
+        return JSONResponse(content={"error": "Video not found"}, status_code=404)
+    with video_lock:
+        current_video_file = video_name
+        with analytics_lock:
+            analytics_data["current_video"] = video_name
+    logger.info(f"🎬 Video changed to: {video_name}")
+    return {"status": "success", "current_video": video_name}
+
 # ============================================================
 # UPDATE FUNCTIONS (called by video processor)
 # ============================================================
@@ -204,3 +231,8 @@ def update_analytics(data):
     global analytics_data
     with analytics_lock:
         analytics_data.update(data)
+
+def get_current_video():
+    """Get current video file"""
+    with video_lock:
+        return current_video_file
